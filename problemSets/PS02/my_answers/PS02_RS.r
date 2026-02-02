@@ -1,0 +1,117 @@
+library(readr)
+library(dplyr)
+#1
+setwd("~/Desktop/whiz1/DataViz_2026/problemSets/PS02/my_answers")
+data <- read_csv("NCSS_v1.csv") %>%
+  select(
+    CASEID,
+    YEAR,
+    GDREGION,
+    NUMOFFMBR,
+    TRAD6,
+    TRAD12,
+    INCOME
+  )
+
+str(data)
+head(data)
+summary(data)
+
+#2
+ncss_filtered <- data %>%
+  filter(TRAD6 %in% c("Chrétiennes", "Juives", "Musulmanes"))
+print(ncss_filtered)
+
+#3
+summary_trad6_year <- ncss_filtered %>%
+  group_by(YEAR, TRAD6) %>%
+  summarise(
+    n_congregations = n(),
+    mean_income = mean(INCOME, na.rm = TRUE),
+    median_income = median(INCOME, na.rm = TRUE),
+    .groups = "drop"
+  )
+print(summary_trad6_year)
+
+#4
+ncss_filtered <- ncss_filtered %>%
+  group_by(YEAR) %>%
+  mutate(
+    AVG_INCOME = if_else(
+      INCOME >= mean(INCOME, na.rm = TRUE),
+      1,
+      0
+    )
+  ) %>%
+  ungroup()
+print(head(ncss_filtered))
+
+#Data Visualization 
+#1
+library(ggplot2)
+
+ggplot(ncss_filtered, aes(x = factor(YEAR), fill = TRAD12)) +
+  geom_bar(position = "fill") +
+  labs(
+    x = "Year",
+    y = "Proportion of congregations",
+    fill = "Religious classification (TRAD12)",
+    title = "Proportion of Congregations by Religious Classification and Year"
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal()
+
+#2
+ggplot(ncss_filtered, aes(x = TRAD6, fill = TRAD12, weight = NUMOFFMBR)) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ YEAR) +
+  labs(
+    x = "Religious classification (TRAD6)",
+    y = "Number of official members",
+    fill = "Religious classification (TRAD12)",
+    title = "Distribution of Official Members by Religious Classification and Year"
+  ) +
+  theme_minimal()
+
+#3
+install.packages("ggridges")
+library(ggridges)
+#Filter for 2022 and remove NAs in NUMOFFMBR or AVG_INCOME
+ncss_2022 <- ncss_filtered %>%
+  filter(YEAR == 2022, !is.na(NUMOFFMBR), !is.na(AVG_INCOME))
+
+#Ridge plot
+ggplot(ncss_2022, aes(x = NUMOFFMBR, y = GDREGION, fill = factor(AVG_INCOME))) +
+  geom_density_ridges(alpha = 0.7, scale = 1.2) +
+  labs(
+    x = "Number of Official Members",
+    y = "Region",
+    fill = "AVG INCOME\n(1=Above/Average, 0=Below)",
+    title = "Distribution of Congregations by Income Level and Region (2022)"
+  ) +
+  scale_fill_manual(values = c("0" = "#FF6F61", "1" = "#4E79A7")) +
+  scale_x_continuous(limits = c(0, 20000)) +
+  theme_minimal()
+
+#4
+ncss_box <- ncss_filtered %>%
+  filter(YEAR %in% c(2009, 2022))
+
+#Boxplot 
+ggplot(ncss_box, aes(x = GDREGION, y = NUMOFFMBR, fill = factor(YEAR))) +
+  geom_boxplot(outlier.alpha = 0.3, alpha = 0.7, position = position_dodge(width = 0.8)) +
+  labs(
+    x = "Region",
+    y = "Number of Official Members",
+    fill = "Year",
+    title = "Number of Official Members by Region (2009 vs 2022)"
+  ) +
+  scale_y_continuous(limits = c(0, 15000)) +
+  scale_fill_manual(values = c("2009" = "#FF6F61", "2022" = "#4E79A7")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
+
