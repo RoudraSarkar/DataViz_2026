@@ -84,7 +84,7 @@ The data for this problem set come from the	Canadian Election Study (\href{https
 \begin{enumerate}
 \item Load the CES .csv file from \href{https://raw.githubusercontent.com/ASDS-TCD/DataViz_2026/refs/heads/main/datasets/CES2015.csv}{GitHub} into your global environment. Filter respondents to only include "high quality" participants: 
 \begin{verbatim}
-ces2015 <- ces2015 |> filter(discard == 0)
+ces2015 <- ces2015 |> filter(discard == "Good quality")
 \end{verbatim}
 \item Recode potential turnout as a binary variable using \texttt{voted\_for}. Consider respondents who gave a valid party as having voted, while “none/spoiled ballot” as not having voted. Treat “Don’t know” (98) and “Refused” (99) as missing.
 \item Create an age variable and group into categories (e.g., $<$30, 30-44, 45-64, 65+). Year of birth is in age (four‑digit year).
